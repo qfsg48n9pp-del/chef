@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>منصة فالح الهركان</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --gold: #FFD700; --green: #2ecc71; --dark: #0a0a0a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        
+        body { 
+            background: var(--dark); 
+            color: white; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column;
+            overflow: hidden; /* يمنع الصفحة كاملة من الهز */
+        }
+
+        /* الهيدر ثابت فوق */
+        .header { 
+            padding: 15px; 
+            background: #111; 
+            border-bottom: 2px solid var(--gold); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            z-index: 100;
+        }
+
+        /* منطقة الشات - خليت لها مسافة تحت عشان سفاري */
+        #chatBox { 
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px;
+            padding-bottom: 100px; /* مسافة أمان لشريط سفاري */
+        }
+
+        .msg { padding: 12px; border-radius: 12px; background: #1e1e1e; max-width: 85%; align-self: flex-start; }
+        .owner-msg { border-right: 4px solid var(--gold); background: rgba(255, 215, 0, 0.1); }
+        .gold-name { color: var(--gold) !important; font-weight: bold; }
+
+        /* منطقة الإدخال - رفعتها فوق شوي عن الحافة */
+        .input-area { 
+            position: fixed; 
+            bottom: 25px; /* مرفوعة عن شريط سفاري */
+            left: 0;
+            right: 0;
+            padding: 15px; 
+            background: rgba(17, 17, 17, 0.95); 
+            display: flex; 
+            gap: 10px; 
+            border-top: 1px solid #333;
+            backdrop-filter: blur(10px);
+            z-index: 200;
+        }
+
+        input { 
+            flex: 1; 
+            padding: 15px; 
+            border-radius: 12px; 
+            border: 1px solid #444; 
+            background: #222; 
+            color: white; 
+            font-size: 16px; /* يمنع سفاري من عمل زوم تلقائي */
+            outline: none;
+        }
+
+        button { 
+            background: var(--gold); 
+            border: none; 
+            padding: 0 20px; 
+            border-radius: 12px; 
+            color: black; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+
+        .status-dot { width: 10px; height: 10px; background: var(--green); border-radius: 50%; display: inline-block; margin-left: 5px; box-shadow: 0 0 8px var(--green); }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div><span class="status-dot"></span> <small style="color:var(--green)">متصل</small></div>
+        <div style="font-weight: bold; color: var(--gold);">AL-HARKAN OS 👑</div>
+        <div id="ownerTag" style="display:none; border:1px solid var(--gold); padding:2px 5px; font-size:10px;">OWNER</div>
+    </header>
+
+    <div id="chatBox">
+        <div class="msg">أرحب يا فالح.. تم حل مشكلة شريط سفاري. اكتب **Gh** للتجربة.</div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="اكتب هنا..." autocomplete="off">
+        <button onclick="sendMessage()">إرسال</button>
+    </div>
+
+    <script>
+        let isOwner = false;
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (text === "Gh") {
+                isOwner = true;
+                document.getElementById('ownerTag').style.display = 'block';
+                addMsg("النظام", "تم تفعيل السيطرة الذهبية يا هركان! 👑", true);
+            } else {
+                addMsg(isOwner ? "فالح الهركان" : "مستخدم", text, isOwner);
+            }
+            input.value = "";
+            
+            // سحب الشات للأسفل عشان تشوف آخر رسالة
+            const box = document.getElementById('chatBox');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function addMsg(sender, text, owner) {
+            const box = document.getElementById('chatBox');
+            const div = document.createElement('div');
+            div.className = owner ? "msg owner-msg" : "msg";
+            div.innerHTML = `<b class="${owner ? 'gold-name' : ''}">${sender}:</b><br>${text}`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>
