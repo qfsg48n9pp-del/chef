@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة فالح الهركان - شات مباشر</title>
+    
+    <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root { --gold: #FFD700; --dark: #0f0f0f; --neon: #00F2EA; }
+        body { background: var(--dark); color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        .header { padding: 15px; background: #1a1a1a; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
+        #chat { flex: 1; padding: 20px; overflow-y: auto; background: #050505; }
+        .msg { margin-bottom: 10px; padding: 10px 15px; border-radius: 10px; background: #222; max-width: 80%; }
+        .owner-msg { border-right: 4px solid var(--gold); background: #1a1a00 !important; }
+        .input-area { padding: 15px; background: #1a1a1a; display: flex; gap: 10px; }
+        input { flex: 1; padding: 12px; border-radius: 8px; border: none; background: #333; color: white; }
+        button { padding: 10px 20px; background: var(--gold); border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .owner-badge { color: var(--gold); display: none; font-size: 0.8rem; border: 1px solid var(--gold); padding: 2px 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div style="font-weight: bold;">AL-HARKAN LIVE 🦾</div>
+    <div id="ownerTag" class="owner-badge">OWNER</div>
+</header>
+
+<div id="chat">
+    <div class="msg">النظام: أرسل الرابط لخويك عشان يبدأ الشات المباشر..</div>
+</div>
+
+<div class="input-area">
+    <input type="text" id="msgInput" placeholder="اكتب رسالتك أو كود Gh..." onkeypress="if(event.key==='Enter') send()">
+    <button onclick="send()">إرسال</button>
+</div>
+
+<script>
+    let isOwner = false;
+    let myName = "مستخدم";
+    
+    // إعداد الاتصال المباشر (Peer-to-Peer)
+    // ملاحظة: PeerJS يربط المتصفحات ببعض مباشرة باستخدام ID بسيط
+    const peer = new Peer('harkan-' + Math.floor(Math.random() * 1000)); 
+    let conn;
+
+    peer.on('open', (id) => {
+        console.log('ID الخاص بك هو: ' + id);
+        // هنا نقدر نربط بينك وبين خويك تلقائياً إذا عرفنا الـ ID
+    });
+
+    // استقبال الاتصال من خويك
+    peer.on('connection', (c) => {
+        conn = c;
+        setupChat();
+    });
+
+    function setupChat() {
+        conn.on('data', (data) => {
+            appendMsg(data.name, data.text, data.isOwner);
+        });
+    }
+
+    function send() {
+        const input = document.getElementById('msgInput');
+        const val = input.value.trim();
+        if(!val) return;
+
+        // تفعيل الأونر السري
+        if(val === "Gh") {
+            isOwner = true;
+            myName = "فالح الهركان"; [cite: 2026-01-16]
+            document.getElementById('ownerTag').style.display = 'block';
+            appendMsg("النظام", "أرحب يا أونر فالح! تم التفعيل 👑", true);
+            input.value = "";
+            return;
+        }
+
+        appendMsg(myName, val, isOwner);
+        
+        // إرسال للطرف الثاني إذا كان متصل
+        if(conn && conn.open) {
+            conn.send({ name: myName, text: val, isOwner: isOwner });
+        }
+        input.value = "";
+    }
+
+    function appendMsg(name, text, owner) {
+        const chat = document.getElementById('chat');
+        const div = document.createElement('div');
+        div.className = owner ? "msg owner-msg" : "msg";
+        div.innerHTML = `<b style="color:${owner?'var(--gold)':'var(--neon)'}">${name}:</b> ${text}`;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    // للتبسيط: إذا تبي تربط مع خويك، لازم تحط الـ ID حقه هنا (هذا الجزء للتطوير)
+    // لكن حالياً الكود يعمل "محلياً" وكشات واجهة فخم.
+</script>
+
+</body>
+</html>
