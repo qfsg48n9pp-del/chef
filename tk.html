@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Pro - منصة فالح الهركان</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root { --primary: #FF0050; --secondary: #00F2EA; --dark: #121212; --gold: #FFD700; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--dark); color: white; direction: rtl; }
+        
+        /* واجهة الدخول الأصلية */
+        .auth-container { max-width: 400px; margin: 50px auto; padding: 30px; background: rgba(255, 255, 255, 0.05); border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .logo { font-size: 2.5rem; font-weight: bold; background: linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin-bottom: 20px; }
+        .input-group { margin-bottom: 15px; }
+        .input-group input { width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; color: white; }
+        .btn-primary { width: 100%; padding: 15px; border-radius: 10px; background: linear-gradient(45deg, var(--primary), var(--secondary)); border: none; color: white; font-weight: bold; cursor: pointer; }
+        
+        /* رتبة فالح الفخمة */
+        .owner-badge { color: var(--gold); border: 1px solid var(--gold); padding: 2px 8px; border-radius: 5px; font-size: 0.8rem; margin-right: 5px; }
+        .verified-badge { color: var(--secondary); margin-right: 5px; }
+
+        /* الهيدر */
+        .app-header { position: fixed; top: 0; width: 100%; background: rgba(18, 18, 18, 0.95); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; z-index: 1000; }
+        #app { display: none; padding-top: 80px; }
+    </style>
+</head>
+<body>
+
+    <div id="authPages">
+        <div class="auth-container">
+            <h1 class="logo">TikTok Pro</h1>
+            <div id="regFields" style="display: none;">
+                <div class="input-group">
+                    <input type="text" id="regUsername" placeholder="اسم المستخدم (فالح الهاجري)">
+                </div>
+            </div>
+            <div class="input-group">
+                <input type="email" id="loginEmail" placeholder="البريد الإلكتروني">
+            </div>
+            <div class="input-group">
+                <input type="password" id="loginPassword" placeholder="كلمة المرور">
+            </div>
+            <button id="mainBtn" class="btn-primary" onclick="handleAuth()">تسجيل الدخول</button>
+            <p style="text-align: center; margin-top: 15px; color: #888; cursor: pointer;" onclick="toggleMode()" id="toggleText">
+                ليس لديك حساب؟ <b>إنشاء حساب جديد</b>
+            </p>
+            <p id="errorMsg" style="color: var(--primary); text-align: center; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div id="app">
+        <header class="app-header">
+            <div class="logo" style="font-size: 1.5rem;">TikTok Pro</div>
+            <div id="userDisplay"></div>
+            <button onclick="logout()" style="background: none; border: none; color: white; cursor: pointer;"><i class="fas fa-sign-out-alt"></i></button>
+        </header>
+        
+        <div style="padding: 20px; text-align: center;">
+            <h2 id="welcomeMsg"></h2>
+            <p style="margin-top: 20px; color: #888;">المنصة جاهزة لرفع الفيديوهات والرسائل يا أونر 🦾</p>
+            </div>
+    </div>
+
+    <script>
+        // ⚠️ فالح، هنا تحط الأرقام اللي في شاشة Firebase السوداء عندك ⚠️
+        const firebaseConfig = {
+            apiKey: "ضع_هنا_الـ_API_KEY",
+            authDomain: "مشروعك.firebaseapp.com",
+            projectId: "مشروعك",
+            storageBucket: "مشروعك.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:xxxx"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let isLogin = true;
+
+        function toggleMode() {
+            isLogin = !isLogin;
+            document.getElementById('regFields').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('mainBtn').innerText = isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
+            document.getElementById('toggleText').innerHTML = isLogin ? 'ليس لديك حساب؟ <b>إنشاء حساب جديد</b>' : 'لديك حساب؟ <b>تسجيل دخول</b>';
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPassword').value;
+            const userNm = document.getElementById('regUsername').value;
+
+            try {
+                let res;
+                if (isLogin) {
+                    res = await auth.signInWithEmailAndPassword(email, pass);
+                } else {
+                    res = await auth.createUserWithEmailAndPassword(email, pass);
+                }
+
+                // تفعيل حساب فالح (أونر وموثق) [cite: 2026-01-22]
+                let role = (email === "faleh370@icloud.com") ? "owner" : "user";
+                let verified = (email === "faleh370@icloud.com");
+                let name = (email === "faleh370@icloud.com") ? "فالح الهركان" : (userNm || "مستخدم جديد");
+
+                await db.collection('users').doc(res.user.uid).set({
+                    username: name,
+                    role: role,
+                    isVerified: verified,
+                    email: email
+                }, { merge: true });
+
+                showApp(name, role, verified);
+            } catch (err) {
+                document.getElementById('errorMsg').innerText = "خطأ: " + err.message;
+            }
+        }
+
+        function showApp(name, role, verified) {
+            document.getElementById('authPages').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            
+            let badge = role === 'owner' ? '<span class="owner-badge">OWNER</span>' : '';
+            let vBadge = verified ? '<i class="fas fa-check-circle verified-badge"></i>' : '';
+            
+            document.getElementById('userDisplay').innerHTML = badge + " " + vBadge;
+            document.getElementById('welcomeMsg').innerHTML = "مرحباً بك يا " + name;
+        }
+
+        function logout() { auth.signOut().then(() => location.reload()); }
+    </script>
+</body>
+</html>
